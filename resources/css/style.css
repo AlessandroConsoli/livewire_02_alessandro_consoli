@@ -1,0 +1,15 @@
+.bg-navbar-custom{
+    background-color: rgb(37, 209, 152);
+}
+
+.nav-link:hover{
+    color: blue !important;
+}
+
+.bg-custom{
+    background-color: rgb(137, 196, 9);
+}
+
+.vh-custom{
+    height: 40vh;
+}
