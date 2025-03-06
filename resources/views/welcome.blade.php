@@ -2,12 +2,12 @@
 
 
         <div class="bg-custom vh-custom d-flex justify-content-center align-items-center">
-            <h1>Selfwork Livewire</h1>
+            <h1>Benvenuti in questo blog</h1>
         </div>
 
-        <x-container>
+        {{-- <x-container>
             <livewire:counter/>
-        </x-container>
+        </x-container> --}}
 
 
 </x-layout>
