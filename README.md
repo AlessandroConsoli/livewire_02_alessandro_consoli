@@ -1,3 +1,5 @@
+
+
                                 APPUNTI LEZIONI
 
 Per clonare un progetto: 
@@ -238,74 +240,215 @@ Comandi per avviare un nuovo progetto con laravel 11
 
   s     <!--! arrivato al minuto 00:32:00 Video Selfwork - CRUD Livewire  -->
 
+15 In web.php impostiamo la rotta per la <create>
+      Route::get('/create', [ArticleController::class, 'create'])->name('article.create');
+
+  -   Il nome ->name('article.create') comporta che venga creata la cartella article come sottocartella di <views>
+
+16 Andare su ArticleController ed aggiungere la logica per far funzionare la rotta
+
+       public function create(){
+           return view('article.create');
+       }
+   
+17 Impostare il front-end della vista <create.blade.php> 
+    a) Inserire la parte superiore che sarà il titolo della pagina
+    b) Inserire il componente form con <Livewire>
 
 
+  -    <LIVEWIRE CREARE UN COMPONENTE> 
 
+    Documentazione: <https://livewire.laravel.com/docs/quickstart>  
 
+  -  1 Installare usando il comando:   composer require livewire/livewire 
 
+  -  2 Creare il componente <ArticleCreate> usando il comando
+      php artisan make:livewire ArticleCreate
 
-
-
-      Tornare su "App\Providers\FortifyServiceProvider.php" ed inserire all'interno della funzione boot (in fondo) la seguente stringa: 
-
-            Fortify::loginView(function () {
-                    return view('auth.login');
-                });
-
-      Andare sulla cartella "auth" ed al suo interno creare il file login.blade.php
-
-   LARAVEL AUTENTICATION E CRUD al minuto 00:27:00
-
-             
-13  
-
- Vederti la lezione sui componenti, lezione sul bundling degli assets e la lezione sui controller 
-
-
-
-
-
-                           LIVEWIRE                    
-    Documentazione:     https://livewire.laravel.com/docs/quickstart  
-
-1 Installare usando il comando:   composer require livewire/livewire 
-
-2 Lanciare il comando per creare il component "counter" php artisan make:livewire counter 
-
-3 Richiamare all'interno della vista che ci interessa il nuovo componente "counter" appena creato 
-  usando la sintassi:   livewire:nome-del-componente, in questo caso:  livewire:counter  
-  oppure con @livewire('counter')  
-  Importante!!!  Un component livewire può contenere al sul interno un solo <div></div> contenente altri div  
-
-4 Aprire il controller all'interno della cartella app\Livewire\Counter ed inserire le stringhe contenenti gli attributi suggeriti nella documentazione:        https://livewire.laravel.com/docs/quickstart  
-
-    public $count = 1;
- 
-    public function increment()
+  -  3 Aprire il percorso <app\Livewire\ArticleCreate.php> inseriamo gli <attributi pubblici>
+       e se abbiamo intenzione di caricare una immagine inseriamo anche il tratto <WithFileUploads>
+       Inoltre impostiamo l'array di regole $rules = [] per gli elementi obbligatori 
+       ed i messaggi di errore $messages = [] 
+       (suggerimento se la regola è solamente una si può utilizzare la sintassi: 
+       < '*.required'=> 'il campo :attribute è obbligatorio' >   )
+       
+       ad esempio:
+  
+    class ArticleCreate extends Component
     {
-        $this->count++;
-    }
- 
-    public function decrement()
-    {
-        $this->count--;
-    }
- 
-    public function render()
-    {
-        return view('livewire.counter');
+        use WithFileUploads;
+
+        public $title;
+        public $body;
+        public $user_id;
+        public $img;
+
+        protected $rules = [
+            'title' => 'required',
+            'body' => 'required'
+        ];
+
+        protected $messages = [
+            '*.required'=> 'il campo :attribute è richiesto!'
+        ];
+
+        public function render()
+        {
+            return view('livewire.article-create');
+        }
     }
 
+  -  4 Sotto i $messages impostiamo la funzione <articleStore> 
+       a) associare l'attributo pubblico user_id all'id dell'utente autenticato 
+       b) impostare il controllo per l'immagine
+       c) inserire la stringa di creazione dell'articolo <Article::create([])> per la mass assigment
 
-   IMPORTANTE!!!! Qualsiasi attribbuto pubblico dichiarato nel componente backend livewire sarà subito disponibile al componente frontend livewire tramite blade sintax   
-  in questo caso: {{$count}}
+        Article::create([
+            'title'=>$this->title,
+            'body'=>$this->body,
+            'user_id'=>$this->user_id,
+            'img' => !$this->img ? null : $this->img->store('public/img') 
+        ]);
+        <L'ultima stringa si traduce con: se l'utente non ha inserito l'immagine assegna valore null, 
+        <altrimenti salvala nel percorso storage/public/img
 
-5 Continuando a seguire la documentazione ci creiamo i due pulsanti per incrementare e decrementare
-  <button wire:click="increment">+</button>
-  <button wire:click="decrement">-</button>
-  Questo tipo di azioni che modificano un attributo pubblico fanno automaticamente scattare il render del componente
-   Minuto 00:53:00 della lezione Livewire  
-6
+      d) Sempre dentro articleStore creiamo la redirect per l'avvenuto inserimento
+         <return redirect()->route('welcome')->with('successMessage', 'Articolo creato!');
+
+    -5 Andare nella vista create.blade.php e richiamare il componente livewire con la sintassi 
+       <livewire:article-create>
+
+    -6 Impostare il front-end della vista article-create.blade.php in questo caso si tratterà di un form che gestirà immagini
+      quindi avrà attributo enctype= "multipart/form-data" e conterrà le regole per gestire gli errori
+      ad esempio:
+
+      <div>
+          <form enctype="multipart/form-data">
+              @csrf
+              @if ($errors->any())
+                  <div class="alert alert-danger">
+                      <ul>
+                          @foreach ($errors->all() as $error)
+                              <li>{{$error}}</li>
+                          @endforeach
+                      </ul>
+                  </div>
+              @endif
+              <div class="mb-3">
+                  <label for="title" class="form-label">Nome:</label>
+                  <input type="text" id="title" class="form-control" wire:model="title">
+              </div>
+              <div class="mb-3">
+                  <label for="body" class="form-label">Descrizione:</label>
+                  <textarea id="body" cols="30" rows="10" class="form-control" wire:model="body"></textarea>
+              </div>
+              <div class="mb-3">
+                  <label for="img">Inserisci una immagine</label>
+                  <input type="file" class="form-control" wire:model="img">
+              </div>
+              <x-container>
+                  <button type="submit" class="btn btn-primary">Crea</button>
+              </x-container>
+          </form>
+      </div>
+
+
+    -7 Inserire il link nella navbar per la rotta create
+
+    -8 Assegnare il middleware alla rotta article.create  ->middleware('auth');
+
+    -9 Creiamo un componente che gestirà i messaggi di avvenuta creazione e di errore
+       flash-messages.blade.php
+
+       ad esempio:
+
+       <div>
+          @if (@session()->has('successMessage'))
+              <div class="alert alert-success">
+                  <h3 class="text-center">
+                      {{section('successMessage')}}
+                  </h3>
+              </div>    
+          @endif
+          @if (@session()->has('errorMessage'))
+              <div class="alert alert-danger">
+                  <h3 class="text-center">
+                      {{section('errorMessage')}}
+                  </h3>
+              </div>    
+          @endif
+      </div>
+
+    -10 Colleghiamo la cartella storage al progrtto con il comando
+        php artisan storage:link
+
+    -11 Rendiamo disponibile il componente flash-messages alla vista <welcome>
+
+
+    <RIPRENDERE DA Video Selfwork - CRUD Livewire AL MINUTO 01:01:00>
+
+
+
+
+
+
+     
+       
+
+
+
+
+
+
+
+
+
+
+
+
+                              LIVEWIRE CREARE UN COUNTER                   
+                  Documentazione:     https://livewire.laravel.com/docs/quickstart  
+
+      -  1 Installare usando il comando:   composer require livewire/livewire 
+
+      -  2 Lanciare il comando per creare il component "counter" php artisan make:livewire counter 
+
+      -  3 Richiamare all'interno della vista che ci interessa il nuovo componente "counter" appena creato 
+          usando la sintassi:   livewire:nome-del-componente, in questo caso:  livewire:counter  
+          oppure con @livewire('counter')  
+          Importante!!!  Un component livewire può contenere al sul interno un solo <div></div> contenente altri div  
+
+      - 4 Aprire il controller all'interno della cartella app\Livewire\Counter ed inserire le stringhe contenenti 
+          gli attributi suggeriti nella documentazione:<https://livewire.laravel.com/docs/quickstart>  
+
+
+
+      public $count = 1;
+        
+      public function increment()
+      {
+          $this->count++;
+      }
+  
+      public function decrement()
+      {
+          $this->count--;
+      }
+  
+      public function render()
+      {
+          return view('livewire.counter');
+      }
+
+
+      IMPORTANTE!!!! Qualsiasi attributo pubblico dichiarato nel componente backend livewire sarà subito disponibile al componente frontend livewire tramite blade sintax   
+      in questo caso: {{$count}}
+
+    -  5 Continuando a seguire la documentazione ci creiamo i due pulsanti per incrementare e decrementare
+          <button wire:click="increment">+</button>
+          <button wire:click="decrement">-</button>
+          Questo tipo di azioni che modificano un attributo pubblico fanno automaticamente scattare il render del componente
+          Minuto 00:53:00 della lezione Livewire 
 
 
 

@@ -5,9 +5,9 @@
             <h1>Benvenuti in questo blog</h1>
         </div>
 
-        {{-- <x-container>
-            <livewire:counter/>
-        </x-container> --}}
+        <x-container>
+            <x-flash-messages/>
+        </x-container>
 
 
 </x-layout>

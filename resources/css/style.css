@@ -6,6 +6,15 @@
     color: blue !important;
 }
 
+.dropdown-menu{
+    background-color: rgb(37, 209, 152) !important;
+}
+
+.dropdown-item:hover{
+    color: blue !important;
+    background-color: rgb(37, 209, 152) !important;
+}
+
 .bg-custom{
     background-color: rgb(137, 196, 9);
 }

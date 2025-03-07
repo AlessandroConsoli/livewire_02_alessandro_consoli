@@ -12,9 +12,6 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#">Archivio Articoli</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Crea un articolo</a>
-                </li>
                 @auth
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -32,6 +29,9 @@
                         >
                         @csrf
                         </form>
+                    </li>
+                    <li>
+                      <a href="{{route('article.create')}}" class="dropdown-item">Crea un articolo</a>
                     </li>
                     </ul>
                   </li>
