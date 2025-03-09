@@ -20,7 +20,7 @@
                     <a href="{{route('article.edit', compact('article'))}}" class="btn btn-warning">Modifica l'articolo</a>
                 </div>
                 <div class= "d-flex justify-content-center mb-2">
-                    <livewire:article-delete :article="$article"></livewire:article-delete>
+                    <livewire:article-delete :article="$article" />
                 </div>
             </div>
         @endif
