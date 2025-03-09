@@ -525,7 +525,81 @@ Comandi per avviare un nuovo progetto con laravel 11
     -23 A questo punto possiamo aggiungere il riferimento alla funzione nel form 
         <form enctype="multipart/form-data" wire:submit.prevent="articleUpdate">
 
+    -24 Impostiamo la rotta per poter visualizzare l'articolo completo (andiamo su web.php)
 
+        Route::get('/show/{article}', [ArticleController::class, 'show'])->name('article.show')->middleware('auth');
+       -"A discrezione" anche questa rotta potrebbe essere resa disponibile solo per gli utenti loggati
+
+    -25 Andiamo su app\Http\Controllers\ArticleController.php ed impostiamo la funzione che restituirà la vista
+
+        public function show(Article $article){
+            return view('article.show', compact('article'));
+        }
+
+    -26 Creiamo la vista show.blade.php dentro la cartella resources\views\article
+        Impostiamo il front-end. Ad esempio:
+
+    <x-layout>
+        <div class="container">
+            <div class="row justify-content-center align-items-center my-5">
+                <div class="col-12">
+                    <h1 class="text-center display-5">Dettagli dell'articolo {{$article->title}}</h1>
+                </div>
+                <div class="col-12 col-md-6 d-flex justify-content-center align-items-center">
+                    <img src="{{$article->img ? Storage::url($article->img) : 'https://thumb.ac-illust.com/b1/b170870007dfa419295d949814474ab2_t.jpeg'}}" alt="Immagine dell'articolo {{$article->title}}" class="mx-auto img-fluid rounded shadow" width="400">
+                </div>
+            </div>
+            <div class="col-12 col-md-6 justify-content-center">
+                <p class="fs-5">{{$article->body}}</p>
+                <p class="text-muted">Scritto da: {{$article->user->name}} </p>
+                <p class="text-muted">Ultima revisione: {{$article->user->updated_at}} </p>
+            </div>
+            @auth
+            @if (Auth::id() == $article->user->id)
+                <div class="row mt-5">
+                    <div class= "d-flex justify-content-center mb-2">
+                        <a href="{{route('article.edit', compact('article'))}}" class="btn btn-warning">Modifica l'articolo</a>
+                    </div>
+                    <div class= "d-flex justify-content-center mb-2">
+                        <a href="{{route('article.edit', compact('article'))}}" class="btn btn-danger">Elimina l'articolo</a>
+                    </div>
+                </div>
+            @endif
+        @endauth        
+        </div>
+    </x-layout>
+
+       -Ed aggiungiamo la rotta ad article-index.blade.php in modo da far funzionare il pulsante che avevamo lasciato vuoto
+        Importante occorre anche passare il dato quindi 
+        
+        {{route('article.show', compact('article'))}}
+
+    -27 Creiamo il nouvo componente livewire per cancella gli articoli con il comando
+        php artisan make:livewire ArticleDelete
+
+       -ed andiamo a gestire la logica su app\Livewire\ArticleDelete.php ad esempio: 
+
+            public function deleteArticle(){
+                if ($this->article->user->id == Auth::id()) {
+                    $articleName = $this->article->title;
+                    if ($this->article->img != null) {
+                        Storage::delete($this->article->img);
+                    }
+                    $this->article->delete();
+                    return redirect()->route('welcome')->with('successMessage', 'Articolo "' . $articleName .  '" eliminato');
+                } else {
+                    return redirect()->route('welcome')->with('errorMessage', 'Non disponi delle autorizzazioni per cancellare questo articolo');
+                }
+            }
+
+    -28 Passiamo a gestire il front-end
+        inseriamo la stringa
+        <button wire:click="deleteArticle{{$article}}" class="btn btn-danger">Elimina l'articolo</button>
+
+
+    
+
+        
 
 
 

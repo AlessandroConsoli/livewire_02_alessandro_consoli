@@ -9,7 +9,7 @@
                         <h5 class="card-title">{{$article->title}}</h5>
                         <div class="justify-content-center">
                             <div class="col-12 d-flex justify-content-center mb-3">
-                                <a href="#" class="btn btn-success">Vai all'articolo completo</a>
+                                <a href="{{route('article.show', compact('article'))}}" class="btn btn-success">Vai all'articolo completo</a>
                             </div>
                             <div class="col-12 d-flex justify-content-center">
                                 @auth

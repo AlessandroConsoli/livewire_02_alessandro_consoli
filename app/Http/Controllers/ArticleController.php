@@ -15,4 +15,8 @@ class ArticleController extends Controller
         return view('article.edit', compact('article')); //* aggiungo anche il dato che è l'articolo con "compact"
     }
 
+    public function show(Article $article){
+        return view('article.show', compact('article'));
+    }
+
 }
