@@ -8,6 +8,10 @@
         <x-container>
             <x-flash-messages/>
         </x-container>
+        
+        <livewire:article-index>
+
+        </livewire:article-index>
 
 
 </x-layout>

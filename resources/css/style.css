@@ -22,3 +22,12 @@
 .vh-custom{
     height: 40vh;
 }
+
+.cardImgCustom{
+    height: 18rem;
+    object-fit: cover;
+}
+
+.bg-card-custom{
+    background-color: rgb(37, 209, 152);
+}

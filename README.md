@@ -379,13 +379,156 @@ Comandi per avviare un nuovo progetto con laravel 11
           @endif
       </div>
 
-    -10 Colleghiamo la cartella storage al progrtto con il comando
+    -10 Colleghiamo la cartella storage al progetto con il comando
         php artisan storage:link
 
     -11 Rendiamo disponibile il componente flash-messages alla vista <welcome>
 
 
-    <RIPRENDERE DA Video Selfwork - CRUD Livewire AL MINUTO 01:01:00>
+    -12 Creaiamo il nuovo componente livewire che ci permetterà di visualizzare tutti i nostri articolo
+        attraverso il comando <php artisan make:livewire ArticleIndex>
+
+    -13 richiamiamo il componente in una nuova vista oppure in una di quelle già create
+        <livewire:article-index>
+        ed andiamo a gestire la logica presente nel percorso <app\Livewire\ArticleIndex.php>
+        questa volta direttamente all'interno della funzione <render> andremo ad inserire la chiamata per tutti gli articoli
+        ordinati per data di creazione. <Importante passare anche la variabile alla vista quindi>:
+        
+        class ArticleIndex extends Component
+        {
+            public function render()
+            {
+                $articles = Article::all()->sortByDesc('created_at');
+                return view('livewire.article-index', compact('articles'));
+            }
+        }
+
+    -14 Andiamo a gestire il front-end del componente <article-index.blade.php>
+        inseriamo un @foreach in modo da ciclare gli articoli che passeremo alla vista
+        ad esempio: 
+
+                <div class="container d-flex justify-content-around min-vh-100">
+                    <div class="row col-12">
+                        @foreach ($articles as $article)
+                        <div class="col-12 col-md-4 mb-5">
+                            <div class="card mx-auto" style="width: 18rem;">
+                                <img src="{{!$article->img ? 'https://thumb.ac-illust.com/b1/b170870007dfa419295d949814474ab2_t.jpeg' : Storage::url($article->img)}}" class="card-img-top cardImgCustom" alt="Immagine dell'articolo {{$article->title}}">
+                                <div class="card-body d-flex justify-content-center bg-card-custom">
+                                    <div>
+                                        <h5 class="card-title">{{$article->title}}</h5>
+                                        <div class="justify-content-center">
+                                            <div class="col-12 d-flex justify-content-center mb-3">
+                                                <a href="#" class="btn btn-success">Vai all'articolo completo</a>
+                                            </div>
+                                        </div>
+                                    </div>        
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+    -15 Creaiamo la rotta per poter modificare l'articolo:
+        sarà una rotta di tipo get e parametrica ed aggiungeremo anche il middleware in modo da renderla disponibile solo all'utente loggato.
+
+        Route::get('/edit/{article}', [ArticleController::class, 'edit'])->name('article.edit')->middleware('auth');
+
+    -16 Apriamo <app\Http\Controllers\ArticleController.php 
+     -  ed aggiungiamo la funzione edit che abbiamo appena citato nella nuova rotta creata al punto 15
+
+    -17 Creiamo la vista della rotta article.edit
+        all'interno della cartella resources\views\article creiamo il file <edit.blade.php>
+        e gestiamo la parte front-end della vista. 
+        In questo caso mi servirà un form che mi faccia vedere gli elementi dell'articolo
+        Suggerimento basta riciclare il form della vista "create" 
+        e cambiare il componente livewire con quello che creeremo tra poco
+        Inoltre aggiungo un controllo per permettere di modificare l'articolo solo all'utente che lo ha creato
+
+                @auth
+                    @if (Auth::id() == $article->user->id)
+                        <a href="{{route('article.edit', compact('article'))}}" class="btn btn-warning">Modifl'articolo</a>
+                    @endif
+                @endauth
+
+       -IMPORTANTE!!!!!!   
+        -1) Occorre impostare le relazioni tra user_id ed article_id altrimenti si avrà un errore
+           Per farlo occorre andare sul <modello Article.php> ed inserire subito sotto i fillable, la funzione:
+
+                public function user(){
+                    return $this->belongsTo(User::class);
+                }
+
+       -2)  Spostarsi sul <modello user.php> ed aggiungere la funzione articles con hasMany:
+
+                public function articles(){
+                    return $this->hasMany(Article::class);
+                }
+
+    -18 Creaiamo il componente livewire per gestire la funzione edit Utilizzando il comando 
+        <php artisan make:livewire ArticleEdit>
+
+      - Apriamo il componente appena creato e sistemiamo la parte front-end
+        Suggerimento: Anche in questo caso potremo copiare il contenuto dal componente article-create.blade.php
+        Per evitare errori momentaneamente però togliamo la funzione dalla stringa del form
+        <form enctype="multipart/form-data" wire:submit.prevent="">    <-------- la imposteremo tra poco
+
+    -19 Andiamo ad impostare la logica su app\Livewire\ArticleEdit.php
+        Aggiungiamo il tratto <use WithFileUploads;>
+        ed aggiungiamo gli attributi pubblici della classe:
+
+        use WithFileUploads;
+        public $article;
+        public $title;
+        public $body;
+        public $img;
+        public $old_img;
+
+       -Subito sotto Aggiungiamo il metodo di livewire <mount> che servirà ad impostare quali dati vogliamo che siano  
+        già presenti dentro al form al caricamento della pagina
+
+    -20 Andiamo su edit.blade.php ed aggiorniamo il componente livewire inserendo il nuovo article-edit ma questa volta
+        dovremo aggingere anche il dato da passare quindi la stringa diventa
+        <livewire:article-edit :article="$article">            
+        </livewire:article-edit>
+
+    -21 Se voglio aggiungere al form anche una piccola anteprima dell'immagine salvata potremo aggiungere questo div: 
+        <div class="mb-3">
+            @if ($article->img)
+                <p class="h5">Immagine attuale:</p>
+                <img src="{{Storage::url($article->img)}}" alt="Immagine di {{$article->title}}" width="150">
+            @else   
+            <p class="text-center fst-italic fw-bold">Attualmente l'articolo non contiene immagini</p>             
+            @endif
+        </div>
+
+    -22 Andiamo su <app\Livewire\ArticleEdit.php> e prima della funzione mount inseriamo la funzione per la modifica
+
+            public function articleUpdate(){
+                $this->article->update([
+                    'title'=>$this->title,
+                    'body'=>$this->body
+                ]);
+
+                if ($this->img) {
+                    $this->article->update([
+                        'img'=>$this->img->store('img', 'public')
+                    ]);
+                    if ($this->old_img) {
+                        Storage::delete($this->old_img);
+                    }
+                    $this->reset('img');
+                }
+                return redirect()->route('welcome')->with('successMessage', 'Articolo aggiornato!');
+            }
+
+    -23 A questo punto possiamo aggiungere il riferimento alla funzione nel form 
+        <form enctype="multipart/form-data" wire:submit.prevent="articleUpdate">
+
+
+
+
+
 
 
 
